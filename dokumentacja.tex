@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage{authblk}
+\usepackage{polski}
+\usepackage[utf8]{inputenc}
+\usepackage{indentfirst}
+\title{Specyfikacja programu PredoBreed}
+\author[1]{Bartosz Czech}
+\author[1]{Artur Wójtowicz}
+\affil[1]{Bioinformatyka, specjalizacja: biostatystyka i programowanie bioinformatyczne}
+\date{}                     %% if you don't need date to appear
+\setcounter{Maxaffil}{0}
+\renewcommand\Affilfont{\itshape\small}
+\begin{document}
+  \maketitle
+\section{Wprowadzenie}
+Poniższy dokument zawiera informację na temat specyfikacji programu PredoBreed, której zadaniem jest predykcja wartości hodowlanej na podstawie informacji rodowodowej oraz informacji o wartości użytkowej analizowanych zwierząt gospodarskich. Ocena wartości genetycznej jest niezbędnym elementem hodowli bez względu na rasę oraz kierunek użytkowania zwierzęcia. Analiza rodowodu oraz wydajności mlecznej pozwala nam na ocenę wartości hodowlanej (genetycznej). Ocenę wartości genetycznej przeprowadza się stosując metody statystyczne oparte na analizie mierzalnej cechy z uwzględnieniem rodowodu. Niezbędnym warunkiem jest posiadanie informacji o użytkowości dużej liczby spokrewnionych zwierząt. Mała ilość danych lub małe spokrewnienie może powodować obniżenie dokładności dokonywanych szacunków. Selekcja jest podstawową metodą hodowlaną, którą stosuje się w przypadkach zwierząt gospodarskich. Polega na wyborze rodziców zwierząt najlepszych pod względem genetycznym. Wartości hodowlanej nie można zmierzyć bezpośrednio, ale możemy ją określić pośrednio na podstawie obserwacji (wydajności) cech ocenianego osobnika.
+
+\section{Cel}
+Celem aplikacji jest umożliwienie przeprowadzenia predykcji wartości genetycznej (hodowlanej) na podstawie danych hodowlanych. Program przy pomocy metod statystycznych umożliwia wykonanie predykcji wartości hodowlanej. Wartość genetyczną analizuje się tylko dla tych cech, które zostały ocenione w skali punktowej lub zmierzone. Każde prognozowanie wartości genetycznej wymaga zastosowania właściwego, dobranego do ocenianej populacji modelu statystycznego, który pozwoli na wyodrębnienie wartości genetycznej zwierzęcia przekazywanej na potomstwo. Dokładność oceny wartości hodowlanej jest jednym z podstawowych warunków uzyskania postępu w hodowli zwierząt.\\
+\indent Aplikacja jest przeznaczona dla hodowców oraz zootechników, którzy dokonują selekcji genomowej zwierzęcia. Aplikacja ma pomóc przy wyborze osobnika przeznaczonego do dalszego rozrodu.
+
+\section{Wersja aplikacji}
+Aplikacja zostanie dostarczona w formie pakietu instalacyjnego. Aplikacja będzie kompatybilna z systemami Windows 7, Windows 8/.1 oraz Windows 10. Program zostanie napisany w języku Python, który jest językiem programowania wysokiego poziomu ogólnego przeznaczenia.
+
+\section{Metoda predykcji}
+Metoda predykcji oparta będzie na metodzie BLUP (\textit{ang. Best Linear Unbiase Predictor}, Najlepszy Liniowy Nieobciążony Predyktor). Zaletą stosowania tej metody jest możliwość predykcji elementów stałych, jak i losowych równocześnie. Metoda pozwala porównywać ze sobą zwierzęta z różnych stad i w różnych okresach czasu. Zastosowanie tej metody ma także pewne ograniczenia --- dla oceny wartości genetycznej zwierząt muszą istnieć powiązania genetyczne między osobnikami.
+
+\section{Interfejs oraz wymagania użytkownika}
+Program będzie posiadał interfejs graficzny umożliwiający łatwe użytkowanie. Wszystkie komunikaty, informacje oraz nazwy klawiszy w interfejsie graficznym będą w języku polskim. W oknie aplikacji użytkownik będzie mógł wczytać wymagane pliki w formacie .txt, a następnie dokonać wyboru stosowanego modelu. Ponadto użytkownik będzie mógł wybrać opcję umożliwiającą rysowanie wykresów oraz wykonanie raportu zawierającego wyniki predykcji wartości genetycznej, wraz z informacją o rankingu zwierząt wybranych jako rodziców w następnym pokoleniu rodzicielskim. Zostaną także wyświetlone statystyki opisowe badanych cech oraz wartości genetycznej i przedstawiony zostanie ogólny model predykcyjny.
+
+\section{Licencja}
+Program będzie posiadał licencję beerware. Oznacza to, że licencjobiorca ma prawo do dowolnego korzystania z oprogramowania pod warunkiem, że w przypadku spotkania autora licencjobiorca postawi mu piwo.
+\end{document}
