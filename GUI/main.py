@@ -48,6 +48,7 @@ class PredoBreedCSV(QTableWidget):
                         else:
                             row_data.append('')
                     writer.writerow(row_data)
+        self.open_sheet(path)
 
 class PredoBreedTXT(QWidget):
     def __init__(self):
@@ -85,6 +86,7 @@ class PredoBreedTXT(QWidget):
         with open(filename[0], 'w') as f:
             my_text = self.text.toPlainText()
             f.write(my_text)
+        self.open_text(filename)
     def open_text(self, path):
         with open(path[0], 'r') as f:
             file_text = f.read()
