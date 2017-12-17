@@ -255,6 +255,8 @@ class PredoBreedMain(QMainWindow):
             self.lic_widget.license()
         elif signal == 'About us!':
             self.lic_widget.about_us()
+        elif signal == 'Help':
+            self.lic_widget.help()
 
     def open_text(self):
         path = QFileDialog.getOpenFileName(self, 'Open File', os.getenv('HOME'))
