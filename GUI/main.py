@@ -44,7 +44,7 @@ class PredoBreedInfo(QWidget):
                             'evaluation of farmed animals.\n'
                             '\t We are interesting in applying a statistics models in biology. We would like to facilitate \n'
                             'the work of biologists and zootechnicians for whom statistical tools are not always easy to use. \n'
-                            'widespread use of the BLUP method has inspired us to create a tool for prediction a genetic value \n'
+                            'Widespread use of the BLUP method has inspired us to create a tool for prediction a genetic value \n'
                             'based on relationship between animals, yield value and belonging to the herd \n'
                             'In the future we would like to create extra models to this software, insofar as we are able, based on \n'
                             'molecular markers (e.g. SNPs, INDELs, VCFs).\n'
