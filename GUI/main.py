@@ -10,31 +10,36 @@ from PyQt5.QtGui import *
 class Calculations(QWidget):
     def __init__(self):
         super().__init__()
+
         self.init_ui()
 
     def init_ui(self):
         self.h2askvalue = QLabel('Squared h value: ')
         self.h2value = QLineEdit()
+        self.h2value.setAlignment(Qt.AlignCenter)
+        self.h2value.setText('0.25')
         self.h2slider = QSlider(Qt.Horizontal)
         self.h2slider.setMinimum(0)
         self.h2slider.setMaximum(100)
         self.h2slider.setValue(25)
         self.h2slider.setTickInterval(10)
         self.h2slider.setTickPosition(QSlider.TicksBelow)
-        self.ranking = QLineEdit()
+        self.parents = QTextBrowser()
+        self.breed = QTextBrowser()
+        self.ranking = QTextBrowser()
 
-        h_box = QHBoxLayout()
-        v_box = QVBoxLayout()
+        lay = QGridLayout()
 
-        h_box.addWidget(self.h2askvalue)
-        h_box.addStretch()
-        h_box.addWidget(self.h2value)
-        h_box.addStretch()
-        h_box.addWidget(self.h2slider)
-        v_box.addLayout(h_box)
-        v_box.addWidget(self.ranking)
+        lay.addWidget(self.h2askvalue, 1, 0)
+        lay.addWidget(self.h2value, 1, 1)
+        lay.addWidget(self.h2slider, 1, 2)
 
-        self.setLayout(v_box)
+        lay.addWidget(self.parents, 10, 0)
+        lay.addWidget(self.breed, 10, 1)
+        lay.addWidget(self.ranking, 10, 2)
+
+        self.setLayout(lay)
+
         self.show()
 
         self.h2slider.valueChanged.connect(self.h2_change)
@@ -43,6 +48,7 @@ class Calculations(QWidget):
         self.show()
 
     def onlyshow(self, signal, data):
+
         self.dane = ''
         for i in data[0:0]:
             self.dane += str(i) + '\t'
@@ -51,9 +57,40 @@ class Calculations(QWidget):
             for i in data[0:0]:
                 self.dane += str(data[i][j]) + '\t'
             self.dane += '\n'
-        print(self.dane)
-        print(signal)
-        self.ranking.setText(self.dane)
+
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setText("Two files required. One with breeding values, second with information about parents.")
+        msg.setInformativeText("Check details for information about already opened file.")
+        msg.setWindowTitle("Two files required!")
+        msg.setDetailedText(self.dane)
+        msg.setStandardButtons(QMessageBox.Open)
+
+        msg.exec_()
+        path = QFileDialog.getOpenFileName(self, 'Open File', os.getenv('HOME'))
+        if path[0] != '':
+            data2 = pd.read_csv(path[0], sep='\t')
+
+            self.dane2 = ''
+            for i in data2[0:0]:
+                self.dane2 += str(i) + '\t'
+            self.dane2 += '\n'
+            for j in range(data2.shape[0]):
+                for i in data2[0:0]:
+                    self.dane2 += str(data2[i][j]) + '\t'
+                self.dane2 += '\n'
+
+            if 'sire' in data2[0:0]:
+                self.parents.setText(self.dane2)
+            else:
+                self.parents.setText(self.dane)
+
+            if 'sire' not in data2[0:0]:
+                self.breed.setText(self.dane2)
+            else:
+                self.breed.setText(self.dane)
+        else:
+            self.onlyshow(signal, data)
 
     def h2_schange(self):
         pass
@@ -92,8 +129,17 @@ class PredoBreedInfo(QWidget):
         self.Qlmain.setAlignment(Qt.AlignHCenter)
         self.Qlmain.setFont(self.mainFont)
 
-        self.Qltext.setText('We\'re Bioinformatic students, you can find us at Faculty of Biology \n'
-                            'and Animal Science in Wroclaw University of Environmental and Life Sciences. \n')
+        self.Qltext.setText('Artur Wójtowicz and Bartosz Czech – biostatistics and bioinformatic programming students\n'
+                            'at Faculty of Biology and Animal Science at Wroclaw University of Environmental and Life Sciences. \n'
+                            'Aim of this software was to create a tool which will be used by animal husbandrists to genetic \n'
+                            'evaluation of farmed animals.\n'
+                            '\nWe are interesting in applying a statistics models in biology. We would like to facilitate \n'
+                            'the work of biologists and zootechnicians for whom statistical tools are not always easy to use.\n'
+                            'Widespread use of the BLUP method has inspired us to create a tool for prediction a genetic value\n'
+                            'based on relationship between animals, yield value and belonging to the herd. \n'
+                            '\nIn the future we would like to create extra models to this software, insofar as we are able, based on\n'
+                            'molecular markers (e.g. SNPs, INDELs, VCFs).\n')
+
         self.Qltext.setAlignment(Qt.AlignCenter)
         self.Qltext.setFont(self.textFont)
 
@@ -290,7 +336,14 @@ class PredoBreedMain(QMainWindow):
         self.show()
 
     def quit_trigger(self):
-        qApp.quit()
+        reply = QMessageBox.question(self, 'Message',
+            "Are you sure to quit?", QMessageBox.Yes |
+            QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.Yes:
+            qApp.quit()
+        else:
+            pass
 
     def respondrun(self, q):
         signal = q.text()
