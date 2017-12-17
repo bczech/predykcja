@@ -15,6 +15,7 @@ class Calculations(QWidget):
 
     def init_ui(self):
         self.h2askvalue = QLabel('Squared h value: ')
+        self.h2askvalue.setAlignment(Qt.AlignRight)
         self.h2value = QLineEdit()
         self.h2value.setAlignment(Qt.AlignCenter)
         self.h2value.setText('0.25')
@@ -27,23 +28,25 @@ class Calculations(QWidget):
         self.parents = QTextBrowser()
         self.breed = QTextBrowser()
         self.ranking = QTextBrowser()
+        self.startbut = QPushButton('Ranking', self)
 
         lay = QGridLayout()
 
         lay.addWidget(self.h2askvalue, 1, 0)
         lay.addWidget(self.h2value, 1, 1)
         lay.addWidget(self.h2slider, 1, 2)
+        lay.addWidget(self.startbut, 1, 3)
 
         lay.addWidget(self.parents, 10, 0)
         lay.addWidget(self.breed, 10, 1)
-        lay.addWidget(self.ranking, 10, 2)
+        lay.addWidget(self.ranking, 10, 2, 1, 3)
 
         self.setLayout(lay)
 
         self.show()
 
         self.h2slider.valueChanged.connect(self.h2_change)
-        self.h2value.textEdited.connect(self.h2_schange)
+        self.startbut.clicked.connect(self.rankingchange)
 
         self.show()
 
@@ -68,9 +71,9 @@ class Calculations(QWidget):
 
         msg.exec_()
         path = QFileDialog.getOpenFileName(self, 'Open File', os.getenv('HOME'))
+
         if path[0] != '':
             data2 = pd.read_csv(path[0], sep='\t')
-
             self.dane2 = ''
             for i in data2[0:0]:
                 self.dane2 += str(i) + '\t'
@@ -81,20 +84,104 @@ class Calculations(QWidget):
                 self.dane2 += '\n'
 
             if 'sire' in data2[0:0]:
+                sire = 'dane2'
                 self.parents.setText(self.dane2)
             else:
+                sire = 'dane'
                 self.parents.setText(self.dane)
 
             if 'sire' not in data2[0:0]:
                 self.breed.setText(self.dane2)
             else:
                 self.breed.setText(self.dane)
+            if sire == 'dane2':
+                self.datasire = data2.as_matrix()
+                n = len(self.datasire[:, 0])
+                self.wynik = self.RelMatrixA(self.datasire[:, 1], self.datasire[:, 2])[0:n, 0:n]
+                self.dane_hod = data
+                self.dane_hodowlane = data.as_matrix()
+
+            elif sire == 'dane':
+                self.datasire = data.as_matrix()
+                n = len(self.datasire[:, 0])
+                self.wynik = self.RelMatrixA(self.datasire[:, 1], self.datasire[:, 2])[0:n, 0:n]
+                self.dane_hod = data2
+                self.dane_hodowlane = data2.as_matrix()
         else:
             self.onlyshow(signal, data)
 
-    def h2_schange(self):
-        pass
- #       print(self.h2value.text())
+
+    def RelMatrixA(self, s, d):
+        n = len(s)
+        N = n + 1
+        A = np.zeros((N, N))
+        s = (s == 0) * N + s
+        d = (d == 0) * N + d
+        for i in range(n):
+            A[i, i] = 1 + A[s[i] - 1, d[i] - 1] * 0.5
+            for j in range(i + 1, n):
+                if j > n:
+                    break
+                A[i, j] = (A[i, s[j] - 1] + A[i, d[j] - 1]) * 0.5
+                A[j, i] = A[i, j]
+        return A
+
+    def rankingchange(self):
+        y = self.dane_hodowlane[:, 1]
+        h2 = self.h2value.text()
+        List = []
+        for k in self.dane_hodowlane[:, 2]:
+            if k not in List:
+                List.append(k)
+
+        herd = {}
+        for j in range(len(List)):
+            herd[j] = List[j]
+
+        x = np.zeros((len(self.dane_hodowlane), len(herd) + 1))
+        for i in range(len(x)):
+            for j in range(len(herd)):
+                if herd[j] == self.dane_hodowlane[:, 2][i]:
+                    x[i][0], x[i][j + 1] = 1, 1
+        z = np.zeros((len(y), len(y)))
+        np.fill_diagonal(z, 1)
+        np.savetxt('macierz_stalych_testowy.txt', x)
+        np.savetxt('macierz_losowych_testowy.txt', z)
+        A = self.wynik
+        odwrA = np.linalg.inv(A)
+        x_t = x.transpose()
+        z_t = z.transpose()
+        L11 = x_t.dot(x)
+        L21 = z_t.dot(x)
+        L12 = x_t.dot(z)
+        L22 = z_t.dot(z) + odwrA * (1 - h2) / h2
+        L1 = np.column_stack((L11, L12))
+        L2 = np.column_stack((L21, L22))
+        L = np.concatenate([L1, L2])
+        odwrL = np.linalg.pinv(L)
+        P1 = x_t.dot(y)
+        P2 = z_t.dot(y)
+        P = np.concatenate([P1, P2])
+        result = odwrL.dot(P)
+        b = result[0:len(herd) + 1]
+        a = result[len(herd) + 1:]
+        predy = x.dot(b) + z.dot(a)
+        e = predy - y
+        print(e)
+        self.dane_hod['BreedingValue'] = a
+
+        self.rank = ''
+        for i in self.dane_hod[0:0]:
+            self.rank += str(i) + '\t'
+        self.rank += '\n'
+        for j in range(self.dane_hod.shape[0]):
+            for i in self.dane_hod[0:0]:
+                self.rank += str(self.dane_hod[i][j]) + '\t'
+            self.rank += '\n'
+
+        self.ranking.setText(self.rank)
+
+
 
     def h2_change(self):
         my_value = str(self.h2slider.value() / 100)
