@@ -37,8 +37,17 @@ class PredoBreedInfo(QWidget):
         self.Qlmain.setAlignment(Qt.AlignHCenter)
         self.Qlmain.setFont(self.mainFont)
 
-        self.Qltext.setText('We\'re Bioinformatic students, you can find us at Faculty of Biology \n'
-                            'and Animal Science in Wroclaw University of Environmental and Life Sciences. \n')
+        self.Qltext.setText('Artur Wójtowicz and Bartosz Czech – biostatistics and bioinformatic programming  students\n'
+                            'at Faculty of Biology and Animal Science \n'
+                            'at Wroclaw University of Environmental and Life Sciences. \n'
+                            'Aim of this software was to create a tool which will be used by animal husbandrists to genetic \n'
+                            'evaluation of farmed animals.\n'
+                            '\t We are interesting in applying a statistics models in biology. We would like to facilitate \n'
+                            'the work of biologists and zootechnicians for whom statistical tools are not always easy to use. \n'
+                            'widespread use of the BLUP method has inspired us to create a tool for prediction a genetic value \n'
+                            'based on relationship between animals, yield value and belonging to the herd \n'
+                            'In the future we would like to create extra models to this software, insofar as we are able, based on \n'
+                            'molecular markers (e.g. SNPs, INDELs, VCFs).\n'
         self.Qltext.setAlignment(Qt.AlignCenter)
         self.Qltext.setFont(self.textFont)
 
