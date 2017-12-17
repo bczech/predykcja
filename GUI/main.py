@@ -3,17 +3,72 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import stats
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QWidget, QLineEdit, QTableWidgetItem, QRadioButton, QLabel, QTextEdit, QPushButton, QVBoxLayout, QHBoxLayout, QAction, qApp, QTableWidget
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+
 
 class PredoBreedInfo(QWidget):
     def __init__(self):
         super().__init__()
-
         self.init_ui()
 
     def init_ui(self):
+        self.Qlmain = QLabel('')
+        self.Qltext = QLabel('')
+        v_box = QVBoxLayout()
+        v_box.addWidget(self.Qlmain)
+        v_box.addWidget(self.Qltext)
+        self.setLayout(v_box)
         self.show()
+
+    def about_us(self):
+
+        self.mainFont = QFont()
+        self.mainFont.setBold(True)
+        self.mainFont.setPixelSize(self.width() * 2)
+
+        self.textFont = QFont()
+        self.textFont.setItalic(True)
+        self.textFont.setPixelSize(self.width())
+
+        self.Qlmain.setText('About us!')
+        self.Qlmain.setOpenExternalLinks(True)
+        self.Qlmain.setAlignment(Qt.AlignHCenter)
+        self.Qlmain.setFont(self.mainFont)
+
+        self.Qltext.setText('We\'re Bioinformatic students, you can find us at Faculty of Biology \n'
+                            'and Animal Science in Wroclaw University of Environmental and Life Sciences. \n')
+        self.Qltext.setAlignment(Qt.AlignCenter)
+        self.Qltext.setFont(self.textFont)
+
+
+    def help(self):
+        pass
+
+    def license(self):
+
+        self.urlLicense="<a href=\"https://github.com/bwczech/predykcja/blob/master/GUI/LICENSE.txt\">The Beerware License</a>"
+
+        self.mainFont = QFont()
+        self.mainFont.setBold(True)
+        self.mainFont.setPixelSize(self.width() * 2)
+
+        self.textFont = QFont()
+        self.textFont.setItalic(True)
+        self.textFont.setPixelSize(self.width())
+
+        self.Qlmain.setText(self.urlLicense)
+        self.Qlmain.setOpenExternalLinks(True)
+        self.Qlmain.setAlignment(Qt.AlignHCenter)
+        self.Qlmain.setFont(self.mainFont)
+
+        self.Qltext.setText('Artur Wójtowicz and Bartosz Czech wrote this code. As long as you retain \n'
+                             'this notice, you can do whatever you want with this stuff. If we \n'
+                             'meet someday, and you think this stuff is worth it, you can \n'
+                             'buy us a beer in return.')
+        self.Qltext.setAlignment(Qt.AlignCenter)
+        self.Qltext.setFont(self.textFont)
 
 class PredoBreedCSV(QTableWidget):
     def __init__(self, r, c):
@@ -150,6 +205,7 @@ class PredoBreedMain(QMainWindow):
         new_menu.addAction(new_txt_action)
         file.addAction(save_action)
         file.addAction(open_action)
+        file.addSeparator()
         file.addAction(quit_action)
 
         # Run Actions
@@ -163,9 +219,10 @@ class PredoBreedMain(QMainWindow):
         # What Actions would do
         quit_action.triggered.connect(self.quit_trigger)
         file.triggered.connect(self.respond)
+        info.triggered.connect(self.respondinfo)
 
         self.setWindowTitle('PredoBreed')
-        self.resize(600,400)
+        self.resize(1400, 800)
 
         self.show()
 
@@ -189,6 +246,15 @@ class PredoBreedMain(QMainWindow):
             self.open_text()
         elif signal == '&Save':
             self.save_text()
+
+    def respondinfo(self, q):
+        signal = q.text()
+        self.lic_widget = PredoBreedInfo()
+        self.setCentralWidget(self.lic_widget)
+        if signal == 'License':
+            self.lic_widget.license()
+        elif signal == 'About us!':
+            self.lic_widget.about_us()
 
     def open_text(self):
         path = QFileDialog.getOpenFileName(self, 'Open File', os.getenv('HOME'))
