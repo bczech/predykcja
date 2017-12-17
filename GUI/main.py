@@ -7,6 +7,61 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
+class Calculations(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.init_ui()
+
+    def init_ui(self):
+        self.h2askvalue = QLabel('Squared h value: ')
+        self.h2value = QLineEdit()
+        self.h2slider = QSlider(Qt.Horizontal)
+        self.h2slider.setMinimum(0)
+        self.h2slider.setMaximum(100)
+        self.h2slider.setValue(25)
+        self.h2slider.setTickInterval(10)
+        self.h2slider.setTickPosition(QSlider.TicksBelow)
+        self.ranking = QLineEdit()
+
+        h_box = QHBoxLayout()
+        v_box = QVBoxLayout()
+
+        h_box.addWidget(self.h2askvalue)
+        h_box.addStretch()
+        h_box.addWidget(self.h2value)
+        h_box.addStretch()
+        h_box.addWidget(self.h2slider)
+        v_box.addLayout(h_box)
+        v_box.addWidget(self.ranking)
+
+        self.setLayout(v_box)
+        self.show()
+
+        self.h2slider.valueChanged.connect(self.h2_change)
+        self.h2value.textEdited.connect(self.h2_schange)
+
+        self.show()
+
+    def onlyshow(self, signal, data):
+        self.dane = ''
+        for i in data[0:0]:
+            self.dane += str(i) + '\t'
+        self.dane += '\n'
+        for j in range(data.shape[0]):
+            for i in data[0:0]:
+                self.dane += str(data[i][j]) + '\t'
+            self.dane += '\n'
+        print(self.dane)
+        print(signal)
+        self.ranking.setText(self.dane)
+
+    def h2_schange(self):
+        pass
+ #       print(self.h2value.text())
+
+    def h2_change(self):
+        my_value = str(self.h2slider.value() / 100)
+        self.h2value.setText(my_value)
 
 class PredoBreedInfo(QWidget):
     def __init__(self):
@@ -37,17 +92,8 @@ class PredoBreedInfo(QWidget):
         self.Qlmain.setAlignment(Qt.AlignHCenter)
         self.Qlmain.setFont(self.mainFont)
 
-        self.Qltext.setText('Artur Wójtowicz and Bartosz Czech – biostatistics and bioinformatic programming  students\n'
-                            'at Faculty of Biology and Animal Science \n'
-                            'at Wroclaw University of Environmental and Life Sciences. \n'
-                            'Aim of this software was to create a tool which will be used by animal husbandrists to genetic \n'
-                            'evaluation of farmed animals.\n'
-                            '\t We are interesting in applying a statistics models in biology. We would like to facilitate \n'
-                            'the work of biologists and zootechnicians for whom statistical tools are not always easy to use. \n'
-                            'Widespread use of the BLUP method has inspired us to create a tool for prediction a genetic value \n'
-                            'based on relationship between animals, yield value and belonging to the herd \n'
-                            'In the future we would like to create extra models to this software, insofar as we are able, based on \n'
-                            'molecular markers (e.g. SNPs, INDELs, VCFs).\n'
+        self.Qltext.setText('We\'re Bioinformatic students, you can find us at Faculty of Biology \n'
+                            'and Animal Science in Wroclaw University of Environmental and Life Sciences. \n')
         self.Qltext.setAlignment(Qt.AlignCenter)
         self.Qltext.setFont(self.textFont)
 
@@ -162,8 +208,10 @@ class PredoBreedTXT(QWidget):
         with open(path[0], 'r') as f:
             file_text = f.read()
             self.text.setText(file_text)
-        self.datatxt = pd.read_csv(path[0], sep=';')
-
+        self.datatxt = pd.read_csv(path[0], sep='\t')
+        datatxt = self.datatxt
+        text = self.text
+        return datatxt, text
     def clear_text(self):
         self.text.clear()
 
@@ -201,6 +249,9 @@ class PredoBreedMain(QMainWindow):
 
 
         # Run Actions
+        start_action = QAction('Start', self) # h2, ranking
+        matrix_action = QAction('Pedigree matrix', self) # Macierz spokrewnień
+        plot_action = QAction('Plot', self) # Plot + Pearson
 
 
         # Info Actions
@@ -218,7 +269,9 @@ class PredoBreedMain(QMainWindow):
         file.addAction(quit_action)
 
         # Run Actions
-
+        run.addAction(start_action)
+        run.addAction(matrix_action)
+        run.addAction(plot_action)
 
         # Info Actions
         info.addAction(how_to_action)
@@ -228,6 +281,7 @@ class PredoBreedMain(QMainWindow):
         # What Actions would do
         quit_action.triggered.connect(self.quit_trigger)
         file.triggered.connect(self.respond)
+        run.triggered.connect(self.respondrun)
         info.triggered.connect(self.respondinfo)
 
         self.setWindowTitle('PredoBreed')
@@ -237,6 +291,20 @@ class PredoBreedMain(QMainWindow):
 
     def quit_trigger(self):
         qApp.quit()
+
+    def respondrun(self, q):
+        signal = q.text()
+        if signal == 'Start':
+            self.cal_widget = Calculations()
+            self.setCentralWidget(self.cal_widget)
+            if self.signal == 'txt':
+                self.cal_widget.onlyshow(self.signal, self.txt_widget.datatxt)
+            elif self.signal == 'csv':
+                self.cal_widget.onlyshow(self.signal, self.csv_widget.datacsv)
+        elif signal == 'Pedigree matrix':
+            pass
+        elif signal == 'Plot':
+            pass
 
     def respond(self, q):
         signal = q.text()
@@ -271,16 +339,12 @@ class PredoBreedMain(QMainWindow):
         path = QFileDialog.getOpenFileName(self, 'Open File', os.getenv('HOME'))
         if path[0][-3:] == 'txt':
             self.signal = 'txt'
-            self.datacsv = pd.read_csv(path[0], sep=';')
-            self.datatxt = ''
             self.txt_widget = PredoBreedTXT()
             self.setCentralWidget(self.txt_widget)
             self.txt_widget.open_text(path)
 
         elif path[0][-3:] == 'csv':
             self.signal = 'csv'
-            self.datatxt = pd.read_csv(path[0], sep=';')
-            self.datacsv = ''
             self.csv_widget = PredoBreedCSV(10, 10)
             self.setCentralWidget(self.csv_widget)
             self.csv_widget.open_sheet(path)
