@@ -3,8 +3,17 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import stats
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QWidget, QTableWidgetItem, QRadioButton, QLabel, QTextEdit, QPushButton, QVBoxLayout, QHBoxLayout, QAction, qApp, QTableWidget
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QWidget, QLineEdit, QTableWidgetItem, QRadioButton, QLabel, QTextEdit, QPushButton, QVBoxLayout, QHBoxLayout, QAction, qApp, QTableWidget
 from PyQt5.QtCore import Qt
+
+class PredoBreedInfo(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.init_ui()
+
+    def init_ui(self):
+        self.show()
 
 class PredoBreedCSV(QTableWidget):
     def __init__(self, r, c):
@@ -16,13 +25,15 @@ class PredoBreedCSV(QTableWidget):
 
         self.show()
 
+    def new_sheet(self):
+        pass
 
     def open_sheet(self, path):
         if path[0] != '':
             with open(path[0], newline='') as csv_file:
                 self.setRowCount(0)
                 self.setColumnCount(3)
-                my_file = csv.reader(csv_file, delimiter=';', quotechar='|')
+                my_file = csv.reader(csv_file, delimiter=';', lineterminator='\n')
                 for row_data in my_file:
                     row = self.rowCount()
                     self.insertRow(row)
@@ -31,14 +42,14 @@ class PredoBreedCSV(QTableWidget):
                     for column, stuff in enumerate(row_data):
                         item = QTableWidgetItem(stuff)
                         self.setItem(row, column, item)
-        self.datacsv = pd.read_csv(path[0], sep=';')
-        self.show()
+            self.datacsv = pd.read_csv(path[0], sep=';')
+            self.show()
 
     def save_sheet(self):
-        path = QFileDialog.getSaveFileName(self, 'Save CSV', os.getenv('HOME'), 'CSV(*.csv)')
+        path = QFileDialog.getSaveFileName(self, 'Save CSV', os.getenv('HOME'), '*.csv')
         if path[0] != '':
             with open(path[0], 'w') as csv_file:
-                writer = csv.writer(csv_file, dialect='excel')
+                writer = csv.writer(csv_file, delimiter=';', lineterminator='\n')
                 for row in range(self.rowCount()):
                     row_data = []
                     for column in range(self.columnCount()):
@@ -48,7 +59,9 @@ class PredoBreedCSV(QTableWidget):
                         else:
                             row_data.append('')
                     writer.writerow(row_data)
-        self.open_sheet(path)
+            self.open_sheet(path)
+        else:
+            pass
 
 class PredoBreedTXT(QWidget):
     def __init__(self):
@@ -56,37 +69,31 @@ class PredoBreedTXT(QWidget):
 
         self.text = QTextEdit(self)
 
-        self.clr_btn = QPushButton('Clear')
-        self.sav_btn = QPushButton('Save')
-        self.opn_btn = QPushButton('Open')
-
         self.init_ui()
 
     def init_ui(self):
         v_layout = QVBoxLayout()
-        h_layout = QHBoxLayout()
-
-        h_layout.addWidget(self.clr_btn)
-        h_layout.addWidget(self.sav_btn)
-        h_layout.addWidget(self.opn_btn)
-
         v_layout.addWidget(self.text)
-        v_layout.addLayout(h_layout)
-
-        self.sav_btn.clicked.connect(self.save_text)
-        self.clr_btn.clicked.connect(self.clear_text)
-        self.opn_btn.clicked.connect(self.open_text)
 
         self.setLayout(v_layout)
-        self.setWindowTitle('PyQt5 TextEdit')
+        self.setWindowTitle('PredoBreed')
 
         self.show()
+
+    def new_text(self):
+        pass
+
+
     def save_text(self):
         filename = QFileDialog.getSaveFileName(self, 'Save File', os.getenv('HOME'))
-        with open(filename[0], 'w') as f:
-            my_text = self.text.toPlainText()
-            f.write(my_text)
-        self.open_text(filename)
+        if filename[0] != '':
+            with open(filename[0], 'w') as f:
+                my_text = self.text.toPlainText()
+                f.write(my_text)
+            self.open_text(filename)
+        else:
+            pass
+
     def open_text(self, path):
         with open(path[0], 'r') as f:
             file_text = f.read()
@@ -121,7 +128,7 @@ class PredoBreedMain(QMainWindow):
         new_csv_action = QAction('CSV file', self)
         new_txt_action = QAction('TXT file', self)
 
-        save_action = QAction('Save', self)
+        save_action = QAction('&Save', self)
         save_action.setShortcut('Ctrl+S')
 
         open_action = QAction('&Open', self)
@@ -169,9 +176,15 @@ class PredoBreedMain(QMainWindow):
         signal = q.text()
 
         if signal == 'CSV file':
-            self.clear_text()
+            self.signal = 'csv'
+            self.csv_widget = PredoBreedCSV(10000, 10)
+            self.setCentralWidget(self.csv_widget)
+            self.csv_widget.new_sheet()
         elif signal == 'TXT file':
-            self.clear_text()
+            self.signal = 'txt'
+            self.txt_widget = PredoBreedTXT()
+            self.setCentralWidget(self.txt_widget)
+            self.txt_widget.new_text()
         elif signal == '&Open':
             self.open_text()
         elif signal == '&Save':
@@ -180,16 +193,30 @@ class PredoBreedMain(QMainWindow):
     def open_text(self):
         path = QFileDialog.getOpenFileName(self, 'Open File', os.getenv('HOME'))
         if path[0][-3:] == 'txt':
-            self.datatxt = pd.read_csv(path[0], sep=';')
+            self.signal = 'txt'
+            self.datacsv = pd.read_csv(path[0], sep=';')
+            self.datatxt = ''
             self.txt_widget = PredoBreedTXT()
             self.setCentralWidget(self.txt_widget)
             self.txt_widget.open_text(path)
 
         elif path[0][-3:] == 'csv':
+            self.signal = 'csv'
             self.datatxt = pd.read_csv(path[0], sep=';')
+            self.datacsv = ''
             self.csv_widget = PredoBreedCSV(10, 10)
             self.setCentralWidget(self.csv_widget)
             self.csv_widget.open_sheet(path)
+
+    def save_text(self):
+        if self.signal == 'txt':
+
+            self.txt_widget.save_text()
+        if self.signal == 'csv':
+
+            self.csv_widget.save_sheet()
+        else:
+            pass
 
 
 
