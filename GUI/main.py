@@ -154,7 +154,7 @@ class Calculations(QWidget):
         L11 = x_t.dot(x)
         L21 = z_t.dot(x)
         L12 = x_t.dot(z)
-        L22 = z_t.dot(z) + odwrA * (1 - h2) / h2
+        L22 = z_t.dot(z) + odwrA * (1 - float(h2)) / float(h2)
         L1 = np.column_stack((L11, L12))
         L2 = np.column_stack((L21, L22))
         L = np.concatenate([L1, L2])
@@ -167,21 +167,19 @@ class Calculations(QWidget):
         a = result[len(herd) + 1:]
         predy = x.dot(b) + z.dot(a)
         e = predy - y
-        print(e)
         self.dane_hod['BreedingValue'] = a
-
+        self.dane_hod2 = self.dane_hod.nlargest(self.dane_hod.shape[0],'BreedingValue')
+        self.dane_hod2 = self.dane_hod2.values.tolist()
         self.rank = ''
         for i in self.dane_hod[0:0]:
             self.rank += str(i) + '\t'
         self.rank += '\n'
-        for j in range(self.dane_hod.shape[0]):
-            for i in self.dane_hod[0:0]:
-                self.rank += str(self.dane_hod[i][j]) + '\t'
+        for i in range(len(self.dane_hod2)):
+            for j in range(len(self.dane_hod2[i])):
+                self.rank += str(self.dane_hod2[i][j]) + '\t'
             self.rank += '\n'
 
         self.ranking.setText(self.rank)
-
-
 
     def h2_change(self):
         my_value = str(self.h2slider.value() / 100)
