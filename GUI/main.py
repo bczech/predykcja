@@ -7,6 +7,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
+
+
 class Calculations(QWidget):
     def __init__(self):
         super().__init__()
@@ -16,18 +18,22 @@ class Calculations(QWidget):
     def init_ui(self):
         self.h2askvalue = QLabel('Squared h value: ')
         self.h2askvalue.setAlignment(Qt.AlignRight)
+
         self.h2value = QLineEdit()
         self.h2value.setAlignment(Qt.AlignCenter)
         self.h2value.setText('0.25')
+
         self.h2slider = QSlider(Qt.Horizontal)
         self.h2slider.setMinimum(0)
         self.h2slider.setMaximum(100)
         self.h2slider.setValue(25)
         self.h2slider.setTickInterval(10)
         self.h2slider.setTickPosition(QSlider.TicksBelow)
+
         self.parents = QTextBrowser()
         self.breed = QTextBrowser()
         self.ranking = QTextBrowser()
+
         self.startbut = QPushButton('Ranking', self)
         self.plot = QPushButton('Plot', self)
         self.Pearson = QPushButton('Pearson', self)
@@ -46,35 +52,50 @@ class Calculations(QWidget):
         lay.addWidget(self.ranking, 10, 2, 1, 4)
 
         self.setLayout(lay)
-
         self.show()
 
         self.h2slider.valueChanged.connect(self.h2_change)
+
         self.startbut.clicked.connect(self.rankingchange)
         self.plot.clicked.connect(self.showplot)
         self.Pearson.clicked.connect(self.CalcPears)
 
         self.show()
 
-    def CalcPears(self):
-        predylist = []
-        for i in range(len(self.predy)):
-            predylist.append(self.predy[i])
-        corr = stats.pearsonr(predylist, self.y)
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Information)
-        msg.setText('Korelacja Pearsona: %15s' % corr[0])
-        msg.setInformativeText('Wartość p: %27s' % corr[1])
-        msg.setWindowTitle("Pearson")
-        msg.setStandardButtons(QMessageBox.Ok)
 
-        msg.exec_()
+    def CalcPears(self):
+        if self.rank != '':
+            predylist = []
+
+            for i in range(len(self.predy)):
+                predylist.append(self.predy[i])
+
+            corr = stats.pearsonr(predylist, self.y)
+
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Information)
+            msg.setText('Korelacja Pearsona: %15s' % corr[0])
+            msg.setInformativeText('Wartość p: %27s' % corr[1])
+            msg.setWindowTitle("Pearson")
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.exec_()
+
+        else:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Information)
+            msg.setText("Ranking has to be done as first")
+            msg.setWindowTitle("Warning!")
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.exec_()
+
 
     def onlyshow(self, signal, data):
-
+        self.rank = ''
         self.dane = ''
+
         for i in data[0:0]:
             self.dane += str(i) + '\t'
+
         self.dane += '\n'
         for j in range(data.shape[0]):
             for i in data[0:0]:
@@ -88,47 +109,89 @@ class Calculations(QWidget):
         msg.setWindowTitle("Two files required!")
         msg.setDetailedText(self.dane)
         msg.setStandardButtons(QMessageBox.Open)
-
         msg.exec_()
+
         path = QFileDialog.getOpenFileName(self, 'Open File', os.getenv('HOME'))
 
-        if path[0] != '':
-            data2 = pd.read_csv(path[0], sep='\t')
-            self.dane2 = ''
+        data2 = self.getdata2(path, signal, data)
+
+        for j in range(data2.shape[0]):
             for i in data2[0:0]:
-                self.dane2 += str(i) + '\t'
+                self.dane2 += str(data2[i][j]) + '\t'
             self.dane2 += '\n'
-            for j in range(data2.shape[0]):
+
+        if 'sire' in data2[0:0]:
+            sire = 'dane2'
+            self.parents.setText(self.dane2)
+
+        else:
+            sire = 'dane'
+            self.parents.setText(self.dane)
+
+        if 'sire' not in data2[0:0]:
+            self.breed.setText(self.dane2)
+
+        else:
+            self.breed.setText(self.dane)
+
+        if sire == 'dane2':
+            self.datasire = data2.as_matrix()
+            n = len(self.datasire[:, 0])
+            self.wynik = self.RelMatrixA(self.datasire[:, 1], self.datasire[:, 2])[0:n, 0:n]
+            self.dane_hod = data
+            self.dane_hodowlane = data.as_matrix()
+
+        elif sire == 'dane':
+            self.datasire = data.as_matrix()
+            n = len(self.datasire[:, 0])
+            self.wynik = self.RelMatrixA(self.datasire[:, 1], self.datasire[:, 2])[0:n, 0:n]
+            self.dane_hod = data2
+            self.dane_hodowlane = data2.as_matrix()
+
+
+    def getdata2(self, path, signal, data):
+        if path[0] != '':
+            if path[0][-3:] == 'txt':
+                data2 = pd.read_csv(path[0], sep='\t')
+                self.dane2 = ''
                 for i in data2[0:0]:
-                    self.dane2 += str(data2[i][j]) + '\t'
+                    self.dane2 += str(i) + '\t'
                 self.dane2 += '\n'
+                return data2
 
-            if 'sire' in data2[0:0]:
-                sire = 'dane2'
-                self.parents.setText(self.dane2)
+            elif path[0][-3:] == 'csv':
+                data2 = pd.read_csv(path[0], sep=';')
+                self.dane2 = ''
+                for i in data2[0:0]:
+                    self.dane2 += str(i) + '\t'
+                self.dane2 += '\n'
+                return data2
+
             else:
-                sire = 'dane'
-                self.parents.setText(self.dane)
-
-            if 'sire' not in data2[0:0]:
-                self.breed.setText(self.dane2)
-            else:
-                self.breed.setText(self.dane)
-            if sire == 'dane2':
-                self.datasire = data2.as_matrix()
-                n = len(self.datasire[:, 0])
-                self.wynik = self.RelMatrixA(self.datasire[:, 1], self.datasire[:, 2])[0:n, 0:n]
-                self.dane_hod = data
-                self.dane_hodowlane = data.as_matrix()
-
-            elif sire == 'dane':
-                self.datasire = data.as_matrix()
-                n = len(self.datasire[:, 0])
-                self.wynik = self.RelMatrixA(self.datasire[:, 1], self.datasire[:, 2])[0:n, 0:n]
-                self.dane_hod = data2
-                self.dane_hodowlane = data2.as_matrix()
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Information)
+                msg.setText("Only files in format .txt or .csv acceptable")
+                msg.setInformativeText("Open, to try again. Cancel to pass.")
+                msg.setWindowTitle("Warning!")
+                msg.setDetailedText(self.dane)
+                msg.setStandardButtons(QMessageBox.Open | QMessageBox.Cancel)
+                msg.exec_()
+                self.signal = signal
+                self.data = data
+                msg.buttonClicked.connect(self.msgbtn)
         else:
             self.onlyshow(signal, data)
+
+
+    def msgbtn(self, i):
+        if i.text() == 'Open':
+            self.onlyshow(self.signal, self.data)
+
+        elif i.text() == 'Cancel':
+            pass
+
+        else:
+            print('Error msgbtn')
 
 
     def RelMatrixA(self, s, d):
@@ -137,8 +200,10 @@ class Calculations(QWidget):
         A = np.zeros((N, N))
         s = (s == 0) * N + s
         d = (d == 0) * N + d
+
         for i in range(n):
             A[i, i] = 1 + A[s[i] - 1, d[i] - 1] * 0.5
+
             for j in range(i + 1, n):
                 if j > n:
                     break
@@ -146,10 +211,12 @@ class Calculations(QWidget):
                 A[j, i] = A[i, j]
         return A
 
+
     def rankingchange(self):
         self.y = self.dane_hodowlane[:, 1]
         h2 = self.h2value.text()
         List = []
+
         for k in self.dane_hodowlane[:, 2]:
             if k not in List:
                 List.append(k)
@@ -163,6 +230,7 @@ class Calculations(QWidget):
             for j in range(len(herd)):
                 if herd[j] == self.dane_hodowlane[:, 2][i]:
                     x[i][0], x[i][j + 1] = 1, 1
+
         z = np.zeros((len(self.y), len(self.y)))
         np.fill_diagonal(z, 1)
         np.savetxt('macierz_stalych_testowy.txt', x)
@@ -190,10 +258,11 @@ class Calculations(QWidget):
         self.dane_hod['BreedingValue'] = a
         self.dane_hod2 = self.dane_hod.nlargest(self.dane_hod.shape[0],'BreedingValue')
         self.dane_hod2 = self.dane_hod2.values.tolist()
-        self.rank = ''
+
         for i in self.dane_hod[0:0]:
             self.rank += str(i) + '\t'
         self.rank += '\n'
+
         for i in range(len(self.dane_hod2)):
             for j in range(len(self.dane_hod2[i])):
                 self.rank += str(self.dane_hod2[i][j]) + '\t'
@@ -201,35 +270,54 @@ class Calculations(QWidget):
 
         self.ranking.setText(self.rank)
 
+
     def showplot(self):
-        plt.figure(figsize=(20, 10))
-        for i in range(len(self.predy)):
-            plt.scatter(self.y[i], self.predy[i], color='black')
-        plt.title('Real values versus prognoses')
-        plt.xlabel('Prawdziwe wartości')
-        plt.ylabel('Prognozy dla wartości fenotypowych')
-        plt.show()
+        if self.rank != '':
+            plt.figure(figsize=(20, 10))
+
+            for i in range(len(self.predy)):
+                plt.scatter(self.y[i], self.predy[i], color='black')
+
+            plt.title('Real values versus prognoses')
+            plt.xlabel('Prawdziwe wartości')
+            plt.ylabel('Prognozy dla wartości fenotypowych')
+
+            plt.show()
+
+        else:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Information)
+            msg.setText("Ranking has to be done as first")
+            msg.setWindowTitle("Warning!")
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.exec_()
+
 
     def h2_change(self):
         my_value = str(self.h2slider.value() / 100)
         self.h2value.setText(my_value)
 
+
+
 class PredoBreedInfo(QWidget):
     def __init__(self):
         super().__init__()
+
         self.init_ui()
 
     def init_ui(self):
         self.Qlmain = QLabel('')
         self.Qltext = QLabel('')
+
         v_box = QVBoxLayout()
         v_box.addWidget(self.Qlmain)
         v_box.addWidget(self.Qltext)
+
         self.setLayout(v_box)
         self.show()
 
-    def about_us(self):
 
+    def about_us(self):
         self.mainFont = QFont()
         self.mainFont.setBold(True)
         self.mainFont.setPixelSize(self.width() * 2)
@@ -253,7 +341,6 @@ class PredoBreedInfo(QWidget):
                             'based on relationship between animals, yield value and belonging to the herd. \n'
                             '\nIn the future we would like to create extra models to this software, insofar as we are able, based on\n'
                             'molecular markers (e.g. SNPs, INDELs, VCFs).\n')
-
         self.Qltext.setAlignment(Qt.AlignCenter)
         self.Qltext.setFont(self.textFont)
 
@@ -261,8 +348,8 @@ class PredoBreedInfo(QWidget):
     def help(self):
         pass
 
-    def license(self):
 
+    def license(self):
         self.urlLicense="<a href=\"https://github.com/bwczech/predykcja/blob/master/GUI/LICENSE.txt\">The Beerware License</a>"
 
         self.mainFont = QFont()
@@ -285,18 +372,22 @@ class PredoBreedInfo(QWidget):
         self.Qltext.setAlignment(Qt.AlignCenter)
         self.Qltext.setFont(self.textFont)
 
+
+
 class PredoBreedCSV(QTableWidget):
     def __init__(self, r, c):
         super().__init__(r, c)
 
         self.init_ui()
 
-    def init_ui(self):
 
+    def init_ui(self):
         self.show()
+
 
     def new_sheet(self):
         pass
+
 
     def open_sheet(self, path):
         if path[0] != '':
@@ -304,34 +395,46 @@ class PredoBreedCSV(QTableWidget):
                 self.setRowCount(0)
                 self.setColumnCount(3)
                 my_file = csv.reader(csv_file, delimiter=';', lineterminator='\n')
+
                 for row_data in my_file:
                     row = self.rowCount()
                     self.insertRow(row)
+
                     if len(row_data) > 3:
                         self.setColumnCount(len(row_data))
+
                     for column, stuff in enumerate(row_data):
                         item = QTableWidgetItem(stuff)
                         self.setItem(row, column, item)
+
             self.datacsv = pd.read_csv(path[0], sep=';')
             self.show()
+
 
     def save_sheet(self):
         path = QFileDialog.getSaveFileName(self, 'Save CSV', os.getenv('HOME'), '*.csv')
         if path[0] != '':
             with open(path[0], 'w') as csv_file:
                 writer = csv.writer(csv_file, delimiter=';', lineterminator='\n')
+
                 for row in range(self.rowCount()):
                     row_data = []
+
                     for column in range(self.columnCount()):
                         item = self.item(row, column)
+
                         if item is not None:
                             row_data.append(item.text())
+
                         else:
                             row_data.append('')
                     writer.writerow(row_data)
             self.open_sheet(path)
+
         else:
             pass
+
+
 
 class PredoBreedTXT(QWidget):
     def __init__(self):
@@ -341,6 +444,7 @@ class PredoBreedTXT(QWidget):
 
         self.init_ui()
 
+
     def init_ui(self):
         v_layout = QVBoxLayout()
         v_layout.addWidget(self.text)
@@ -349,6 +453,7 @@ class PredoBreedTXT(QWidget):
         self.setWindowTitle('PredoBreed')
 
         self.show()
+
 
     def new_text(self):
         pass
@@ -361,8 +466,10 @@ class PredoBreedTXT(QWidget):
                 my_text = self.text.toPlainText()
                 f.write(my_text)
             self.open_text(filename)
+
         else:
             pass
+
 
     def open_text(self, path):
         with open(path[0], 'r') as f:
@@ -372,8 +479,11 @@ class PredoBreedTXT(QWidget):
         datatxt = self.datatxt
         text = self.text
         return datatxt, text
+
+
     def clear_text(self):
         self.text.clear()
+
 
 
 class PredoBreedMain(QMainWindow):
@@ -384,6 +494,7 @@ class PredoBreedMain(QMainWindow):
         self.datacsv = ()
 
         self.init_ui()
+
 
     def init_ui(self):
         # Set a menubar
@@ -407,10 +518,8 @@ class PredoBreedMain(QMainWindow):
 
         quit_action = QAction('&Quit', self)
 
-
         # Run Actions
         BLUP_action = QAction('BLUP', self)
-
 
         # Info Actions
         how_to_action = QAction('Help', self)
@@ -445,6 +554,7 @@ class PredoBreedMain(QMainWindow):
 
         self.show()
 
+
     def quit_trigger(self):
         reply = QMessageBox.question(self, 'Message',
             "Are you sure to quit?", QMessageBox.Yes |
@@ -452,18 +562,24 @@ class PredoBreedMain(QMainWindow):
 
         if reply == QMessageBox.Yes:
             qApp.quit()
+
         else:
             pass
 
+
     def respondrun(self, q):
         signal = q.text()
+
         if signal == 'BLUP':
             self.cal_widget = Calculations()
             self.setCentralWidget(self.cal_widget)
+
             if self.signal == 'txt':
                 self.cal_widget.onlyshow(self.signal, self.txt_widget.datatxt)
+
             elif self.signal == 'csv':
                 self.cal_widget.onlyshow(self.signal, self.csv_widget.datacsv)
+
 
     def respond(self, q):
         signal = q.text()
@@ -473,29 +589,38 @@ class PredoBreedMain(QMainWindow):
             self.csv_widget = PredoBreedCSV(10000, 10)
             self.setCentralWidget(self.csv_widget)
             self.csv_widget.new_sheet()
+
         elif signal == 'TXT file':
             self.signal = 'txt'
             self.txt_widget = PredoBreedTXT()
             self.setCentralWidget(self.txt_widget)
             self.txt_widget.new_text()
+
         elif signal == '&Open':
             self.open_text()
+
         elif signal == '&Save':
             self.save_text()
+
 
     def respondinfo(self, q):
         signal = q.text()
         self.lic_widget = PredoBreedInfo()
         self.setCentralWidget(self.lic_widget)
+
         if signal == 'License':
             self.lic_widget.license()
+
         elif signal == 'About us!':
             self.lic_widget.about_us()
+
         elif signal == 'Help':
             self.lic_widget.help()
 
+
     def open_text(self):
         path = QFileDialog.getOpenFileName(self, 'Open File', os.getenv('HOME'))
+
         if path[0][-3:] == 'txt':
             self.signal = 'txt'
             self.txt_widget = PredoBreedTXT()
@@ -508,16 +633,16 @@ class PredoBreedMain(QMainWindow):
             self.setCentralWidget(self.csv_widget)
             self.csv_widget.open_sheet(path)
 
+
     def save_text(self):
         if self.signal == 'txt':
-
             self.txt_widget.save_text()
-        if self.signal == 'csv':
 
+        if self.signal == 'csv':
             self.csv_widget.save_sheet()
+
         else:
             pass
-
 
 
 if __name__ == '__main__':
