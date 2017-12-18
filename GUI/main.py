@@ -29,6 +29,8 @@ class Calculations(QWidget):
         self.breed = QTextBrowser()
         self.ranking = QTextBrowser()
         self.startbut = QPushButton('Ranking', self)
+        self.plot = QPushButton('Plot', self)
+        self.Pearson = QPushButton('Pearson', self)
 
         lay = QGridLayout()
 
@@ -36,10 +38,12 @@ class Calculations(QWidget):
         lay.addWidget(self.h2value, 1, 1)
         lay.addWidget(self.h2slider, 1, 2)
         lay.addWidget(self.startbut, 1, 3)
+        lay.addWidget(self.plot, 1, 4)
+        lay.addWidget(self.Pearson, 1, 5)
 
-        lay.addWidget(self.parents, 10, 0)
-        lay.addWidget(self.breed, 10, 1)
-        lay.addWidget(self.ranking, 10, 2, 1, 3)
+        lay.addWidget(self.parents, 10, 0, 1, 1)
+        lay.addWidget(self.breed, 10, 1, 1, 1)
+        lay.addWidget(self.ranking, 10, 2, 1, 4)
 
         self.setLayout(lay)
 
@@ -47,8 +51,24 @@ class Calculations(QWidget):
 
         self.h2slider.valueChanged.connect(self.h2_change)
         self.startbut.clicked.connect(self.rankingchange)
+        self.plot.clicked.connect(self.showplot)
+        self.Pearson.clicked.connect(self.CalcPears)
 
         self.show()
+
+    def CalcPears(self):
+        predylist = []
+        for i in range(len(self.predy)):
+            predylist.append(self.predy[i])
+        corr = stats.pearsonr(predylist, self.y)
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setText('Korelacja Pearsona: %15s' % corr[0])
+        msg.setInformativeText('Wartość p: %27s' % corr[1])
+        msg.setWindowTitle("Pearson")
+        msg.setStandardButtons(QMessageBox.Ok)
+
+        msg.exec_()
 
     def onlyshow(self, signal, data):
 
@@ -127,7 +147,7 @@ class Calculations(QWidget):
         return A
 
     def rankingchange(self):
-        y = self.dane_hodowlane[:, 1]
+        self.y = self.dane_hodowlane[:, 1]
         h2 = self.h2value.text()
         List = []
         for k in self.dane_hodowlane[:, 2]:
@@ -143,7 +163,7 @@ class Calculations(QWidget):
             for j in range(len(herd)):
                 if herd[j] == self.dane_hodowlane[:, 2][i]:
                     x[i][0], x[i][j + 1] = 1, 1
-        z = np.zeros((len(y), len(y)))
+        z = np.zeros((len(self.y), len(self.y)))
         np.fill_diagonal(z, 1)
         np.savetxt('macierz_stalych_testowy.txt', x)
         np.savetxt('macierz_losowych_testowy.txt', z)
@@ -159,14 +179,14 @@ class Calculations(QWidget):
         L2 = np.column_stack((L21, L22))
         L = np.concatenate([L1, L2])
         odwrL = np.linalg.pinv(L)
-        P1 = x_t.dot(y)
-        P2 = z_t.dot(y)
+        P1 = x_t.dot(self.y)
+        P2 = z_t.dot(self.y)
         P = np.concatenate([P1, P2])
         result = odwrL.dot(P)
         b = result[0:len(herd) + 1]
         a = result[len(herd) + 1:]
-        predy = x.dot(b) + z.dot(a)
-        e = predy - y
+        self.predy = x.dot(b) + z.dot(a)
+        self.e = self.predy - self.y
         self.dane_hod['BreedingValue'] = a
         self.dane_hod2 = self.dane_hod.nlargest(self.dane_hod.shape[0],'BreedingValue')
         self.dane_hod2 = self.dane_hod2.values.tolist()
@@ -180,6 +200,15 @@ class Calculations(QWidget):
             self.rank += '\n'
 
         self.ranking.setText(self.rank)
+
+    def showplot(self):
+        plt.figure(figsize=(20, 10))
+        for i in range(len(self.predy)):
+            plt.scatter(self.y[i], self.predy[i], color='black')
+        plt.title('Real values versus prognoses')
+        plt.xlabel('Prawdziwe wartości')
+        plt.ylabel('Prognozy dla wartości fenotypowych')
+        plt.show()
 
     def h2_change(self):
         my_value = str(self.h2slider.value() / 100)
@@ -380,9 +409,7 @@ class PredoBreedMain(QMainWindow):
 
 
         # Run Actions
-        start_action = QAction('Start', self) # h2, ranking
-        matrix_action = QAction('Pedigree matrix', self) # Macierz spokrewnień
-        plot_action = QAction('Plot', self) # Plot + Pearson
+        BLUP_action = QAction('BLUP', self)
 
 
         # Info Actions
@@ -400,9 +427,7 @@ class PredoBreedMain(QMainWindow):
         file.addAction(quit_action)
 
         # Run Actions
-        run.addAction(start_action)
-        run.addAction(matrix_action)
-        run.addAction(plot_action)
+        run.addAction(BLUP_action)
 
         # Info Actions
         info.addAction(how_to_action)
@@ -432,17 +457,13 @@ class PredoBreedMain(QMainWindow):
 
     def respondrun(self, q):
         signal = q.text()
-        if signal == 'Start':
+        if signal == 'BLUP':
             self.cal_widget = Calculations()
             self.setCentralWidget(self.cal_widget)
             if self.signal == 'txt':
                 self.cal_widget.onlyshow(self.signal, self.txt_widget.datatxt)
             elif self.signal == 'csv':
                 self.cal_widget.onlyshow(self.signal, self.csv_widget.datacsv)
-        elif signal == 'Pedigree matrix':
-            pass
-        elif signal == 'Plot':
-            pass
 
     def respond(self, q):
         signal = q.text()
