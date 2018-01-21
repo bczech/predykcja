@@ -101,10 +101,10 @@ class PredoBreedMain(QMainWindow):
             self.setCentralWidget(self.cal_widget)
 
             if self.signal == 'txt':
-                self.cal_widget.onlyshow(self.signal, self.txt_widget.datatxt)
+                self.cal_widget.onlyshow(self.signal, self.txt_widget.datatxt, self.path)
 
             elif self.signal == 'csv':
-                self.cal_widget.onlyshow(self.signal, self.csv_widget.datacsv)
+                self.cal_widget.onlyshow(self.signal, self.csv_widget.datacsv, self.path)
 
 
     def respond(self, q):
@@ -146,7 +146,7 @@ class PredoBreedMain(QMainWindow):
 
     def open_text(self):
         path = QFileDialog.getOpenFileName(self, 'Open File', os.getenv('HOME'))
-
+        self.path = path
         if path[0][-3:] == 'txt':
             self.signal = 'txt'
             self.txt_widget = PredoBreedTXT()
@@ -159,6 +159,19 @@ class PredoBreedMain(QMainWindow):
             self.setCentralWidget(self.csv_widget)
             self.csv_widget.open_sheet(path)
 
+        elif path[0][-3:] != 'csv' and path[0][-3:] != 'txt' and path[0] != '':
+            reply = QMessageBox.question(self, 'File extension',
+                                         "File should have .csv or .txt extension, want to open other file?", QMessageBox.Yes |
+                                         QMessageBox.No, QMessageBox.No)
+
+            if reply == QMessageBox.Yes:
+                self.open_text()
+
+            else:
+                pass
+
+        else:
+            pass
 
     def save_text(self):
         if self.signal == 'txt':

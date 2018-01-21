@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import stats
+from fileedit import PredoBreedTXT, PredoBreedCSV
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -82,9 +83,10 @@ class Calculations(QWidget):
             msg.exec_()
 
 
-    def onlyshow(self, signal, data):
+    def onlyshow(self, signal, data, pathmain):
         self.rank = ''
         self.dane = ''
+        self.pathmain = pathmain
 
         for i in data[0:0]:
             self.dane += str(i) + '\t'
@@ -106,35 +108,54 @@ class Calculations(QWidget):
 
         path = QFileDialog.getOpenFileName(self, 'Open File', os.getenv('HOME'))
 
-        data2 = self.getdata2(path, signal, data)
+        while self.pathmain == path:
+            reply = QMessageBox.question(self, 'Same file.',
+                                         "You have opened same file as before, would you like to try again?", QMessageBox.Yes |
+                                         QMessageBox.No, QMessageBox.No)
 
-        for j in range(data2.shape[0]):
-            for i in data2[0:0]:
-                self.dane2 += str(data2[i][j]) + '\t'
-            self.dane2 += '\n'
+            if reply == QMessageBox.Yes:
+                path = QFileDialog.getOpenFileName(self, 'Open File', os.getenv('HOME'))
+                while path[0][-3:] != 'csv' and path[0][-3:] != 'txt':
+                    reply = QMessageBox.question(self, 'File extension.',
+                                                 "You have opened file with different extension then .txt or .csv. Would you like to try again?",
+                                                 QMessageBox.Yes |
+                                                 QMessageBox.No, QMessageBox.No)
 
-        if 'sire' in data2[0:0]:
-            sire = 'dane2'
-            self.parents.setText(self.dane2)
+                    if reply == QMessageBox.Yes:
+                        path = QFileDialog.getOpenFileName(self, 'Open File', os.getenv('HOME'))
 
+                    else:
+                        break
+
+            else:
+                break
+
+        if self.pathmain != path:
+            data2 = self.getdata2(path, signal, data)
+
+            for j in range(data2.shape[0]):
+                for i in data2[0:0]:
+                    self.dane2 += str(data2[i][j]) + '\t'
+                self.dane2 += '\n'
+
+            if 'sire' in data2[0:0]:
+                sire = 'dane2'
+                self.parents.setText(self.dane2)
+                self.breed.setText(self.dane)
+
+            else:
+                sire = 'dane'
+                self.parents.setText(self.dane)
+                self.breed.setText(self.dane2)
+
+
+            if sire == 'dane2':
+                self.datasi = Calc().datasire(data2, data)
+
+            else:
+                self.datasi = Calc().datasire(data, data2)
         else:
-            sire = 'dane'
-            self.parents.setText(self.dane)
-
-        if 'sire' not in data2[0:0]:
-            self.breed.setText(self.dane2)
-
-        else:
-            self.breed.setText(self.dane)
-
-        if sire == 'dane2':
-            self.datasi = Calc().datasire(data2, data)
-
-        elif sire == 'dane':
-            datasi = Calc().datasire(data, data2)
-            self.wynik = datasi[0]
-            self.dane_hod = datasi[1]
-            self.dane_hodowlane = datasi[2]
+            pass
 
 
     def getdata2(self, path, signal, data):
@@ -156,30 +177,13 @@ class Calculations(QWidget):
                 return data2
 
             else:
-                msg = QMessageBox()
-                msg.setIcon(QMessageBox.Information)
-                msg.setText("Only files in format .txt or .csv acceptable")
-                msg.setInformativeText("Open, to try again. Cancel to pass.")
-                msg.setWindowTitle("Warning!")
-                msg.setDetailedText(self.dane)
-                msg.setStandardButtons(QMessageBox.Open | QMessageBox.Cancel)
-                msg.exec_()
-                self.signal = signal
-                self.data = data
-                msg.buttonClicked.connect(self.msgbtn)
-        else:
-            self.onlyshow(signal, data)
+                pass
 
-
-    def msgbtn(self, i):
-        if i.text() == 'Open':
-            self.onlyshow(self.signal, self.data)
-
-        elif i.text() == 'Cancel':
-            pass
+            self.signal = signal
+            self.data = data
 
         else:
-            print('Error msgbtn')
+            self.onlyshow(signal, data, self.pathmain)
 
 
 
