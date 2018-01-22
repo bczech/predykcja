@@ -1,0 +1,78 @@
+/// PREDOBREED GUIDE ///
+1. Moving around
+2. Prepare files
+3. Script to use calculations without GUI.
+4. Bug reporting
+
+
+/// 1. MOVING AROUND ///
+This is simple program, which have only 3 bars in menubar. All of the calculations are automatic. Bars which you can use, are: File, Run, Info.
+
+### File -> New ###
+Here you can create new file, where you going to insert data. If you found some interesting data on the ethernet you can copy and paste it here.
+Remember, that data which you entered there, must fulfill conditions referred in second point - Prepare files.
+### File -> Save ###
+If you already entered data in new created file, or correct file which you open. You can save, by use this bar.
+### File -> Open ###
+You can open files here. Remember, program going to avoid different extension then .csv or .txt
+### File -> Quit ###
+If you did already all the calculations, you can exit from program there.
+
+### Run -> BLUP ###
+Actually this is the only one method you can use in this program. After picked one of two required files, you can move there and program
+automaticly going to ask you for second file. When it's done, you can choose h^2 value, which represent value of the heritability.
+When it's done, and you see both files in program, click Ranking button to estimate breeding values. In right window you going to see
+animal ranking sorted from biggest. By clicking plot and pearson after it, you going to find more information about this data.
+
+### Info ###
+Here you can find all the information, it's not necessary to check it, but we'll be glad if you check license.
+
+
+/// 2. PREPARE FILES ///
+There should be two files, one represent animal pedigree, another breeding values and herd. Values should be separated by tab.
+Below you can find examples of files.
+
+### PEDIGREE FILE ###
+
+animal  sire    dam
+216     14      70
+217     12      17
+218     6       106
+
+### DATA FILE ###
+
+animal	protein	herd
+216     194.93	2
+217     203.92	3
+218     197.12	1
+
+### IMPORTANT THINGS ###
+In pedigree file you have three columns, first represent animal number, second is father number, third is mother number.
+Structure shouldn't be edited here, insert data by creating new lines. animal number no need to be sorted.
+
+In data file animal numbers no need to be sorted either. In place of protein, you can write any breeding value name, which
+you want to estimate. If there's only one herd, please write 1 in every row of this column.
+
+### NOT ACCEPTABLE DATA ###
+Data like "animal" "sire" "dam", where title or data are in apostrophe or brackets are not allowed. Program will command to
+change it before calculations.
+
+/// 3. SCRIPT TO USE CALCULATIONS WITHOUT GUI ///
+
+import pandas as pd
+from calculations import Calc
+
+data = pd.read_csv('yourpedigreefile.txt', sep='\t')
+data2 = pd.read_csv('yourbreedingfile.txt', sep='\t')
+h2val = 0.64
+
+datasi = Calc().datasire(data, data2)
+ranking = Calc().rankingchange(h2val, datasi[0], datasi[1], datasi[2])
+pearson = Calc().Pearson(ranking[1], ranking[2])
+plot = Calc().makeplot(ranking[1], ranking[2])
+
+print(pearson)
+
+/// 4. BUG REPORTING ///
+If you found any bug, please report it on our git, which you can found on link below.
+https://github.com/bwczech/predykcja
