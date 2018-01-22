@@ -3,17 +3,20 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import stats
-from fileedit import PredoBreedTXT, PredoBreedCSV
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
+
+#Class with all the calculations included in program.
 class Calculations(QWidget):
     def __init__(self):
         super().__init__()
 
         self.init_ui()
 
+
+    #GUI change.
     def init_ui(self):
         self.h2askvalue = QLabel('Squared h value: ')
         self.h2askvalue.setAlignment(Qt.AlignRight)
@@ -62,14 +65,15 @@ class Calculations(QWidget):
         self.show()
 
 
+    #Pearson results
     def CalcPears(self):
         if self.rank != '':
             corr = Calc().Pearson(self.y, self.predy)
 
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Information)
-            msg.setText('Korelacja Pearsona: %15s' % corr[0])
-            msg.setInformativeText('Wartość p: %27s' % corr[1])
+            msg.setText('Pearson correlation: %15s' % corr[0])
+            msg.setInformativeText('p-value: %27s' % corr[1])
             msg.setWindowTitle("Pearson")
             msg.setStandardButtons(QMessageBox.Ok)
             msg.exec_()
@@ -83,9 +87,11 @@ class Calculations(QWidget):
             msg.exec_()
 
 
+    #Getting second file and check which one is pedigree.
     def onlyshow(self, signal, data, pathmain):
         self.rank = ''
         self.dane = ''
+        self.datasi = ''
         self.pathmain = pathmain
 
         for i in data[0:0]:
@@ -132,22 +138,27 @@ class Calculations(QWidget):
 
         if self.pathmain != path:
             data2 = self.getdata2(path, signal, data)
+            sire = ''
 
             for j in range(data2.shape[0]):
                 for i in data2[0:0]:
                     self.dane2 += str(data2[i][j]) + '\t'
                 self.dane2 += '\n'
 
-            if 'sire' in data2[0:0]:
+            if 'sire' in data2[0:0] and 'sire' not in data[0:0]:
                 sire = 'dane2'
                 self.parents.setText(self.dane2)
                 self.breed.setText(self.dane)
 
-            else:
+            elif 'sire' in data[0:0] and 'sire' not in data2[0:0]:
                 sire = 'dane'
                 self.parents.setText(self.dane)
                 self.breed.setText(self.dane2)
 
+            else:
+                QMessageBox.question(self, 'Data error.',
+                                         "Load your data again. Prepare it correctly, check how to do it in help.", QMessageBox.Ok)
+                return None
 
             if sire == 'dane2':
                 self.datasi = Calc().datasire(data2, data)
@@ -157,7 +168,7 @@ class Calculations(QWidget):
         else:
             pass
 
-
+    # Getting data
     def getdata2(self, path, signal, data):
         if path[0] != '':
             if path[0][-3:] == 'txt':
@@ -186,15 +197,18 @@ class Calculations(QWidget):
             self.onlyshow(signal, data, self.pathmain)
 
 
-
+    # When user click Ranking in window, those calculations begin.
     def rankingchange(self):
-        RankingCh = Calc().rankingchange(self.h2value.text(), self.datasi[0], self.datasi[1], self.datasi[2])
-        self.rank = RankingCh[0]
-        self.y = RankingCh[1]
-        self.predy = RankingCh[2]
-        self.ranking.setText(self.rank)
+        if self.datasi != '':
+            RankingCh = Calc().rankingchange(self.h2value.text(), self.datasi[0], self.datasi[1], self.datasi[2])
+            self.rank = RankingCh[0]
+            self.y = RankingCh[1]
+            self.predy = RankingCh[2]
+            self.ranking.setText(self.rank)
+        else:
+            return None
 
-
+    # Plotting
     def showplot(self):
         if self.rank != '':
             Calc().makeplot(self.y, self.predy)
@@ -207,12 +221,15 @@ class Calculations(QWidget):
             msg.setStandardButtons(QMessageBox.Ok)
             msg.exec_()
 
-
+    #Change h2 value when user use slider
     def h2_change(self):
         my_value = str(self.h2slider.value() / 100)
         self.h2value.setText(my_value)
 
+
+#Class with main calculations.
 class Calc:
+    #Generate relationship matrix
     def RelMatrixA(self, s, d):
         n = len(s)
         N = n + 1
@@ -230,6 +247,7 @@ class Calc:
                 A[j, i] = A[i, j]
         return A
 
+    #Generate results of breeding data
     def datasire(self, data, data2):
         self.datasire = data.as_matrix()
         n = len(self.datasire[:, 0])
@@ -238,6 +256,7 @@ class Calc:
         dane_hodowlane = data2.as_matrix()
         return wynik, dane_hod, dane_hodowlane
 
+    #Final calculations
     def rankingchange(self, h2, wynik, dane_hod, dane_hodowlane):
         self.y = dane_hodowlane[:, 1]
         List = []
@@ -295,6 +314,8 @@ class Calc:
             self.rank += '\n'
         return self.rank, self.y, self.predy
 
+
+    #Calculate Pearson correlation
     def Pearson(self, y, predy):
         predylist = []
 
@@ -303,6 +324,7 @@ class Calc:
 
         return stats.pearsonr(predylist, y)
 
+    #Make plot
     def makeplot(self, y, predy):
         plt.figure(figsize=(20, 10))
 
