@@ -1,0 +1,77 @@
+PredoBreed program documentation
+================================
+
+  This file presents description of function used in PredoBreed software.
+
+
+PredoBreed.py
+-------------
+
+  PredoBreed.py is a main file which contains GUI and few functions for opening, changing and saving data. It's also main file which
+  classes can't be imported.
+    init_ui function describes menu bars' contents, windows size and title.
+    quit_trigger function contain a message box with quit warning.
+    respondrun, respond and respondinfo functions which defines what happens when user click Run, File or Info in the menubar. 
+      respondrun is connected with calculations.py, respondinfo with readme.py and respond with fileedit.py.
+    open_text funcion defines first file that we open, it checks extension and also have protection script, which avoid opening file 
+      with unexpected extension. It's connected with fileedit.py file.
+    save_text function is connected with fileedit.py file.
+    
+    
+calculations.py
+---------------
+
+  calculations.py includes two classes Calculations and Calc. PredoBreed.py using Calculations class to change GUI and also 
+  it's connected with Calc class which have all functions necessary to calculate. Calc class can be used out of software to
+  make calculations. You can check help.txt file point 3 for more informations.
+  
+    Class Calculations
+    ------------------
+      init_ui function includes GUI design change.
+      CalcPears function is connected with Calc class to calculate Pearson correlation. It also have popup and message to avoid
+        calculate anything without pressing Ranking button on the window.
+      onlyshow function is connected with next function getdata2, to obtain second file with data. Main goal of onlyshow function
+        is to obtain second file, check which file includes pedigree info and to show data in window. It's also connected with Calc
+        class, it uses datasire function to calculate kinship between inviduals.
+      getdata2 function is a bit similar to open_text function in main file, but it doesn't give user opportunity to change data.
+      rankingchange is a function connected with rankingchange function in Calc class. Main goal is to show breeding values in main window.
+      showplot function is connected with Calc class function called makeplot. It have popup message to avoid making plot without
+        any calculations before.
+      h2_change function defines h2 value change, after user move slider.
+      
+      Class Calc
+      ----------
+        RelMatrixA function requires information about sire and dtam to create kinship matrix.
+        datasire function prepare data to make kinship matrix. It's connected with RelMatrixA function.
+        rankingchange function includes all calculations to get breeding values for population. 
+        Pearson function calculates Pearson correlation.
+        makeplot function making plot to visualise real values versus prognoses.
+        
+ 
+fileedit.py
+-----------
+
+  fileedit.py file includes all function necessary to open, save and edit opened file. It includes two classes which usage depends
+  on file extension. It could be made in same class or even function, but make it separated seems like a good way to work on editing
+  file with specific extension in future.
+  
+  Class PredoBreedCSV
+  -------------------
+    open_sheet function read data from .csv files and write this data into window.
+    save_sheet function saving edited data to .csv file.
+    
+  Class PredoBreedTXT
+  -------------------
+    save_text function saving edited data to .txt file.
+    open_text function read data from .txt files and write this data into window.
+    
+    
+readme.py
+---------
+
+  readme.py file includes mostly all informations about software.
+    init_ui function describes main Widget and Labels for this file.
+    about_us function shows information about people who created this software after clicking Info -> About us in menubar.
+    license function shows license of software usage after clicking Info -> License in menubar.
+      
+      
