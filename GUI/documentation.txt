@@ -7,14 +7,14 @@ PredoBreed program documentation
 PredoBreed.py
 -------------
 
-  PredoBreed.py is a main file which contains GUI and few functions for opening, changing and saving data. It's also main file which
-  classes can't be imported.
+  PredoBreed.py is a main file which contains GUI and few functions for opening, changing and saving data. It is also main file which
+  classes cannot be imported.
     init_ui function describes menu bars' contents, windows size and title.
     quit_trigger function contain a message box with quit warning.
     respondrun, respond and respondinfo functions which defines what happens when user click Run, File or Info in the menubar. 
       respondrun is connected with calculations.py, respondinfo with readme.py and respond with fileedit.py.
-    open_text funcion defines first file that we open, it checks extension and also have protection script, which avoid opening file 
-      with unexpected extension. It's connected with fileedit.py file.
+    open_text function defines first file that we open, it checks extension and also have protection script, which avoid opening file 
+      with unexpected extension. It is connected with fileedit.py file.
     save_text function is connected with fileedit.py file.
     
     
@@ -22,27 +22,27 @@ calculations.py
 ---------------
 
   calculations.py includes two classes Calculations and Calc. PredoBreed.py using Calculations class to change GUI and also 
-  it's connected with Calc class which have all functions necessary to calculate. Calc class can be used out of software to
+  it is connected with Calc class which have all functions necessary to calculate. Calc class can be used out of software to
   make calculations. You can check help.txt file point 3 for more informations.
   
     Class Calculations
     ------------------
       init_ui function includes GUI design change.
-      CalcPears function is connected with Calc class to calculate Pearson correlation. It also have popup and message to avoid
+      CalcPears function is connected with Calc class to calculate Pearson's correlation. It also have popup and message to avoid
         calculate anything without pressing Ranking button on the window.
       onlyshow function is connected with next function getdata2, to obtain second file with data. Main goal of onlyshow function
-        is to obtain second file, check which file includes pedigree info and to show data in window. It's also connected with Calc
+        is to obtain second file, check which file includes pedigree info and to show data in window. It is also connected with Calc
         class, it uses datasire function to calculate kinship between inviduals.
-      getdata2 function is a bit similar to open_text function in main file, but it doesn't give user opportunity to change data.
+      getdata2 function is a bit similar to open_text function in main file, but it does not give user opportunity to change data.
       rankingchange is a function connected with rankingchange function in Calc class. Main goal is to show breeding values in main window.
-      showplot function is connected with Calc class function called makeplot. It have popup message to avoid making plot without
+      showplot function is connected with Calc class function called makeplot. It has got popup message to avoid making plot without
         any calculations before.
       h2_change function defines h2 value change, after user move slider.
       
       Class Calc
       ----------
         RelMatrixA function requires information about sire and dtam to create kinship matrix.
-        datasire function prepare data to make kinship matrix. It's connected with RelMatrixA function.
+        datasire function prepare data to make kinship matrix. It is connected with RelMatrixA function.
         rankingchange function includes all calculations to get breeding values for population. 
         Pearson function calculates Pearson correlation.
         makeplot function making plot to visualise real values versus prognoses.
