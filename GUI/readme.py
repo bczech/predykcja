@@ -45,7 +45,7 @@ class PredoBreedInfo(QWidget):
                             'Widespread use of the BLUP method has inspired us to create a tool for prediction a genetic value\n'
                             'based on relationship between animals, yield value and belonging to the herd. \n'
                             '\nIn the future we would like to create extra models to this software, insofar as we are able, based on\n'
-                            'molecular markers (e.g. SNPs, INDELs, VCFs).\n')
+                            'molecular markers (e.g. SNPs, INDELs, CNVs).\n')
         self.Qltext.setAlignment(Qt.AlignCenter)
         self.Qltext.setFont(self.textFont)
 
